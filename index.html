@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="《风起向日葵》是一段由双手带起微风、唤醒水彩向日葵花园的沉浸式互动艺术体验。"
+    />
+    <meta name="theme-color" content="#f4ece3" />
+    <title>风起向日葵 · Lxx66</title>
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="experience" id="experience">
+      <canvas id="gardenCanvas" aria-label="水彩向日葵花园互动场景"></canvas>
+      <div class="paper-grain" aria-hidden="true"></div>
+      <div class="soft-vignette" aria-hidden="true"></div>
+
+      <header class="masthead">
+        <a class="wordmark" href="./" aria-label="重新载入风起向日葵">
+          <span class="wordmark__title">风起向日葵</span>
+          <span class="wordmark__credit">Lxx66</span>
+        </a>
+        <div class="top-actions">
+          <span class="mode-badge" id="modeBadge" hidden>双手风场</span>
+          <button
+            class="icon-button"
+            id="soundButton"
+            type="button"
+            aria-label="关闭声音"
+            aria-pressed="false"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9v6h4l5 4V5L8 9H4Z" />
+              <path class="sound-wave" d="M16 8.5a5 5 0 0 1 0 7" />
+              <path class="sound-wave" d="M18.5 6a8.5 8.5 0 0 1 0 12" />
+            </svg>
+          </button>
+          <button
+            class="icon-button"
+            id="restartButton"
+            type="button"
+            aria-label="重新开始"
+            hidden
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 11a8 8 0 1 1-2.34-5.66L20 7.68" />
+              <path d="M20 3v4.68h-4.68" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="entry-screen" id="entryScreen" aria-labelledby="entryTitle">
+        <div class="entry-copy">
+          <p class="eyebrow">一段由风唤醒的花园</p>
+          <h1 id="entryTitle">风起向日葵</h1>
+          <p class="entry-intro">
+            让手穿过屏幕，带来一阵微风。<br />
+            花园会记得你的停留，也会安静地等待。
+          </p>
+          <div class="entry-actions">
+            <button class="primary-button" id="cameraButton" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 8.5h3l1.4-2h7.2l1.4 2h3v10H4v-10Z" />
+                <circle cx="12" cy="13.5" r="3.2" />
+              </svg>
+              <span id="cameraButtonLabel">进入花园</span>
+            </button>
+            <button class="text-button" id="pointerEntryButton" type="button">
+              使用鼠标体验
+            </button>
+          </div>
+          <p class="entry-note">
+            摄像头画面只在你的设备上处理，不会上传。建议使用桌面 Chrome 或 Edge。
+          </p>
+        </div>
+        <p class="entry-signature">《风起向日葵》 · Lxx66</p>
+      </section>
+
+      <section
+        class="compatibility-screen"
+        id="compatibilityScreen"
+        aria-labelledby="compatibilityTitle"
+        hidden
+      >
+        <div class="compatibility-copy">
+          <p class="eyebrow">需要更大的花园</p>
+          <h1 id="compatibilityTitle">请在电脑上打开</h1>
+          <p id="compatibilityReason">
+            这段体验需要桌面版 Chrome 或 Edge，并至少保留 1280 × 720 的窗口。
+          </p>
+        </div>
+      </section>
+
+      <section
+        class="permission-screen"
+        id="permissionScreen"
+        aria-labelledby="permissionTitle"
+        hidden
+      >
+        <div class="permission-copy">
+          <p class="eyebrow">花园还没有听见风</p>
+          <h2 id="permissionTitle">无法使用摄像头</h2>
+          <p id="permissionReason">
+            请检查浏览器摄像头权限，或先用鼠标完成这段体验。
+          </p>
+          <div class="permission-actions">
+            <button class="primary-button" id="retryCameraButton" type="button">
+              再次尝试
+            </button>
+            <button class="text-button" id="permissionPointerButton" type="button">
+              使用鼠标体验
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="stage-ui" id="stageUi" aria-live="polite" hidden>
+        <div class="gesture-demo" id="gestureDemo" aria-hidden="true">
+          <svg viewBox="0 0 180 90">
+            <path
+              class="gesture-demo__trail"
+              d="M18 54c25-22 53-30 84-17 22 9 38 7 59-9"
+            />
+            <path
+              class="gesture-demo__hand"
+              d="M84 66V48m9 14V41m9 21V44m9 16V49m-28 9-4-11m2 12c-5-2-8-5-10-9m10 9c8 4 17 4 25 0"
+            />
+            <circle class="gesture-demo__dot" cx="18" cy="54" r="3" />
+          </svg>
+        </div>
+        <p class="stage-prompt" id="stagePrompt">抬起一只手，缓缓带起风</p>
+        <p class="pause-hint" id="pauseHint" hidden>花园正在等待你的手</p>
+      </section>
+
+      <aside class="camera-panel" id="cameraPanel" hidden>
+        <div class="camera-frame">
+          <video id="cameraVideo" autoplay muted playsinline></video>
+          <canvas id="cameraOverlay" aria-hidden="true"></canvas>
+          <span class="camera-idle" id="cameraIdle">寻找手部</span>
+        </div>
+        <div class="camera-caption">
+          <span id="cameraStatus">摄像头启动中</span>
+          <span>仅本机处理</span>
+        </div>
+      </aside>
+
+      <section class="finale" id="finale" aria-live="polite" hidden>
+        <p class="eyebrow">风停在这里</p>
+        <h2>花园记得你带来的风</h2>
+        <p>金色的向日葵已经盛开。</p>
+        <button class="text-button" id="finaleRestartButton" type="button">
+          再看一次
+        </button>
+      </section>
+
+      <div class="toast" id="toast" role="status" hidden></div>
+
+      <noscript>请启用 JavaScript 以进入互动花园。</noscript>
+    </main>
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
