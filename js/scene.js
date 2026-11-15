@@ -32,6 +32,7 @@ export class GardenScene {
     this.time = 0;
     this.lastTimestamp = 0;
     this.energy = 0;
+    this.smoothedBend = 0;
     this.progress = 0;
     this.active = false;
     this.finalizing = false;
@@ -492,6 +493,15 @@ export class GardenScene {
   }
 
   updatePlants(delta) {
+    const averageVelocity =
+      this.hands.length > 0
+        ? this.hands.reduce((sum, hand) => sum + (hand.vx || 0), 0) /
+          this.hands.length
+        : 0;
+    const targetBend = clamp(averageVelocity * 0.85, -0.5, 0.5);
+    const bendSmoothing = Math.min(1, delta * (this.active ? 2.2 : 4.5));
+    this.smoothedBend = mix(this.smoothedBend, this.active ? targetBend : 0, bendSmoothing);
+
     for (const plant of this.plants) {
       if (this.finalizing) {
         plant.windBloom = Math.min(1, plant.windBloom + delta * 0.72);
@@ -513,7 +523,7 @@ export class GardenScene {
       if (canWake && wind.strength > 0.015) {
         const gain = delta * (0.24 + this.energy * 1.22) * wind.strength;
         plant.windBloom = Math.min(1, plant.windBloom + gain);
-        const smoothing = Math.min(1, delta * 7);
+        const smoothing = Math.min(1, delta * 2.2);
         plant.windX = mix(plant.windX, wind.x, smoothing);
         plant.windY = mix(plant.windY, wind.y, smoothing);
       } else {
@@ -657,9 +667,9 @@ export class GardenScene {
     const plantHeight = plant.height * growth;
     const windSway =
       Math.sin(this.time * (0.65 + plant.depth * 0.22) + plant.seed) *
-      (3.8 + this.energy * 27) *
+      (3 + this.energy * 13) *
       plant.depth +
-      plant.windX * (12 + plant.windBloom * 52) * plant.depth;
+      plant.windX * (8 + plant.windBloom * 18) * plant.depth;
     const handBend = this.getHandBend(baseX, baseY);
     const tipX =
       baseX +
@@ -670,8 +680,8 @@ export class GardenScene {
     const controlX =
       baseX +
       plant.lean * plantHeight * 0.32 +
-      windSway * 0.36 +
-      handBend * (0.28 + plant.depth * 0.22);
+      windSway * 0.24 +
+      handBend * (0.18 + plant.depth * 0.14);
     const controlY = baseY - plantHeight * 0.54;
 
     ctx.save();
@@ -807,7 +817,7 @@ export class GardenScene {
     const diskRadius = size * mix(0.13, 0.31, open);
     const headScale = mix(0.38, 1, open);
     const headRadius = size * 1.06 * headScale;
-    const headDrift = Math.sin(this.time * 0.8 + seed) * 0.018 * open;
+    const headDrift = Math.sin(this.time * 0.55 + seed) * 0.008 * open;
     ctx.save();
     ctx.rotate(headDrift);
     ctx.drawImage(
@@ -887,7 +897,7 @@ export class GardenScene {
       const y = blade.y * this.height;
       const sway =
         Math.sin(this.time * 0.72 + blade.phase) *
-          (3.5 + blade.depth * 6 + this.energy * 28) +
+          (3.5 + blade.depth * 6 + this.energy * 14) +
         this.getHandBend(x, y) * blade.depth;
       const tipX = x + blade.curve * blade.height + sway;
       const tipY = y - blade.height;
@@ -958,10 +968,10 @@ export class GardenScene {
       const distance = Math.sqrt(dx * dx + dy * dy);
       const influence = clamp(1 - distance / (this.width * 0.38));
       bend +=
-        influence * (hand.vx || 0) * 150 +
-        Math.sign(dx) * influence * this.energy * 8;
+        influence * this.smoothedBend * 34 +
+        Math.sign(dx) * influence * this.energy * 2.5;
     }
-    return clamp(bend, -92, 92);
+    return clamp(bend, -26, 26);
   }
 
   updateWindTrails(delta) {

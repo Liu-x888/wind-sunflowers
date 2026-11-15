@@ -24,19 +24,26 @@
           <span class="wordmark__credit">Lxx66</span>
         </a>
         <div class="top-actions">
+          <span class="music-hint" id="musicHint">
+            自动播放《Flower Dance》 · 右上角可切换歌曲
+          </span>
           <span class="mode-badge" id="modeBadge" hidden>双手风场</span>
           <button
-            class="icon-button"
-            id="soundButton"
+            class="icon-button netease-button"
+            id="musicButton"
             type="button"
-            aria-label="关闭声音"
-            aria-pressed="false"
+            aria-label="选择网易云音乐"
+            aria-controls="musicPanel"
+            aria-expanded="false"
+            title="网易云音乐"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 9v6h4l5 4V5L8 9H4Z" />
-              <path class="sound-wave" d="M16 8.5a5 5 0 0 1 0 7" />
-              <path class="sound-wave" d="M18.5 6a8.5 8.5 0 0 1 0 12" />
-            </svg>
+            <span class="netease-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <circle cx="7" cy="17" r="2.3" />
+                <circle cx="17.5" cy="15" r="2.3" />
+                <path d="M9.3 17V6.2l10.5-2.1v11" />
+              </svg>
+            </span>
           </button>
           <button
             class="icon-button"
@@ -50,6 +57,104 @@
               <path d="M20 3v4.68h-4.68" />
             </svg>
           </button>
+          <section
+            class="music-panel"
+            id="musicPanel"
+            aria-label="网易云音乐歌曲选择"
+            aria-hidden="true"
+            inert
+          >
+            <div class="music-panel__header">
+              <div>
+                <p class="music-panel__eyebrow">风中的歌</p>
+                <h2>网易云音乐</h2>
+              </div>
+              <span class="music-panel__count">3 首</span>
+            </div>
+            <div class="track-list" id="trackList" role="radiogroup" aria-label="选择歌曲">
+              <button
+                class="track-option"
+                type="button"
+                role="radio"
+                aria-checked="false"
+                data-song-id="406173"
+              >
+                <span>
+                  <strong class="track-option__title">Flower Dance</strong>
+                  <span class="track-option__artist">DJ OKAWARI · 花间律动</span>
+                </span>
+                <span class="track-option__status">当前</span>
+              </button>
+              <button
+                class="track-option"
+                type="button"
+                role="radio"
+                aria-checked="false"
+                data-song-id="417596830"
+              >
+                <span>
+                  <strong class="track-option__title">美好事物</strong>
+                  <span class="track-option__artist">房东的猫 · 温柔生长</span>
+                </span>
+                <span class="track-option__status">当前</span>
+              </button>
+              <button
+                class="track-option"
+                type="button"
+                role="radio"
+                aria-checked="false"
+                data-song-id="406232"
+              >
+                <span>
+                  <strong class="track-option__title">Luv Letter</strong>
+                  <span class="track-option__artist">DJ OKAWARI · 微风来信</span>
+                </span>
+                <span class="track-option__status">当前</span>
+              </button>
+            </div>
+            <div class="netease-player" id="neteasePlayer">
+              <span class="netease-player__art" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="7" cy="17" r="2.3" />
+                  <circle cx="17.5" cy="15" r="2.3" />
+                  <path d="M9.3 17V6.2l10.5-2.1v11" />
+                </svg>
+              </span>
+              <div class="netease-player__meta">
+                <strong id="currentTrackTitle">Flower Dance</strong>
+                <span id="currentTrackArtist">DJ OKAWARI</span>
+                <div
+                  class="audio-progress"
+                  id="audioProgress"
+                  role="progressbar"
+                  aria-label="歌曲播放进度"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                >
+                  <span id="audioProgressFill"></span>
+                </div>
+                <span class="audio-time" id="audioTime">00:00 / 00:00</span>
+              </div>
+              <button
+                class="player-toggle"
+                id="playerToggle"
+                type="button"
+                aria-label="播放音乐"
+              >
+                <svg class="player-toggle__play" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m9 6 9 6-9 6V6Z" />
+                </svg>
+                <svg class="player-toggle__pause" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 6h3v12H8V6Zm5 0h3v12h-3V6Z" />
+                </svg>
+              </button>
+              <audio id="neteaseAudio" preload="auto" autoplay hidden></audio>
+            </div>
+            <p class="music-provider" id="musicProvider">
+              音源来自网易云音乐
+            </p>
+          </section>
         </div>
       </header>
 

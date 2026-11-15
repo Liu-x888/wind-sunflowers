@@ -1,6 +1,5 @@
 import { GardenScene } from "./scene.js";
 import { HandTracker } from "./hand-tracker.js";
-import { ScorePlayer } from "./score-player.js";
 
 const $ = (selector) => document.querySelector(selector);
 const elements = {
@@ -25,7 +24,19 @@ const elements = {
   cameraIdle: $("#cameraIdle"),
   cameraStatus: $("#cameraStatus"),
   modeBadge: $("#modeBadge"),
-  soundButton: $("#soundButton"),
+  musicHint: $("#musicHint"),
+  musicButton: $("#musicButton"),
+  musicPanel: $("#musicPanel"),
+  trackOptions: [...document.querySelectorAll(".track-option")],
+  neteasePlayer: $("#neteasePlayer"),
+  neteaseAudio: $("#neteaseAudio"),
+  playerToggle: $("#playerToggle"),
+  currentTrackTitle: $("#currentTrackTitle"),
+  currentTrackArtist: $("#currentTrackArtist"),
+  audioProgress: $("#audioProgress"),
+  audioProgressFill: $("#audioProgressFill"),
+  audioTime: $("#audioTime"),
+  musicProvider: $("#musicProvider"),
   restartButton: $("#restartButton"),
   finale: $("#finale"),
   finaleRestart: $("#finaleRestartButton"),
@@ -33,7 +44,7 @@ const elements = {
 };
 
 const scene = new GardenScene(elements.canvas);
-const score = new ScorePlayer("./assets/wind-sunflowers-score.wav");
+const DEFAULT_SONG_ID = "406173";
 
 const state = {
   mode: null,
@@ -52,6 +63,10 @@ const state = {
   pausedAt: 0,
   toastTimer: null,
   screenTimer: null,
+  musicPanelOpen: false,
+  activeSongId: DEFAULT_SONG_ID,
+  userPaused: false,
+  autoplayPending: true,
 };
 
 let handTracker = null;
@@ -214,16 +229,11 @@ async function beginExperience(mode) {
   elements.cameraPanel.hidden = mode !== "camera";
   elements.cameraPanel.classList.toggle("is-visible", mode === "camera");
   elements.restartButton.hidden = false;
-  try {
-    await score.start();
-  } catch (error) {
-    showToast("浏览器暂时无法播放配乐，体验仍可继续。");
-  }
 }
 
 async function startCameraMode() {
   if (!updateCompatibility()) return;
-  score.start().catch(() => {});
+  startCurrentTrack();
   elements.cameraButton.disabled = true;
   elements.cameraButtonLabel.textContent = "正在听见风";
   elements.retryCamera.disabled = true;
@@ -255,7 +265,6 @@ async function startCameraMode() {
     handTracker = null;
     elements.permissionReason.textContent = getCameraErrorMessage(error);
     setScreen(elements.permission);
-    score.pause();
   } finally {
     elements.cameraButton.disabled = false;
     elements.cameraButtonLabel.textContent = "进入花园";
@@ -265,6 +274,7 @@ async function startCameraMode() {
 
 function startPointerMode() {
   if (!updateCompatibility()) return;
+  startCurrentTrack();
   beginExperience("pointer");
   state.lastPointerAt = 0;
 }
@@ -363,12 +373,6 @@ function updateExperience(now) {
     state.progress = clamp(state.progress + (delta / 48) * rate);
   }
 
-  if (active && !score.running) {
-    score.start().catch(() => {});
-  } else if (!active && score.running) {
-    score.pause();
-  }
-
   if (
     state.progress >= 1 &&
     scene.getBloomCoverage() >= 0.85 &&
@@ -393,7 +397,6 @@ function finishExperience() {
 }
 
 function resetExperience() {
-  score.restart();
   scene.resetBloom();
   state.progress = 0;
   state.energy = 0;
@@ -406,9 +409,6 @@ function resetExperience() {
   elements.finale.hidden = true;
   elements.stageUi.hidden = false;
   elements.pauseHint.hidden = true;
-  if (state.mode === "camera" && state.cameraHands.length) {
-    score.start().catch(() => {});
-  }
 }
 
 function animationLoop(now) {
@@ -456,28 +456,174 @@ function handlePreviewMode() {
   return true;
 }
 
+function setMusicPanelOpen(open) {
+  state.musicPanelOpen = open;
+  elements.musicPanel.classList.toggle("is-open", open);
+  elements.musicPanel.setAttribute("aria-hidden", String(!open));
+  elements.musicPanel.inert = !open;
+  elements.musicButton.setAttribute("aria-expanded", String(open));
+}
+
+function formatAudioTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return "00:00";
+  const minutes = Math.floor(seconds / 60);
+  const remaining = Math.floor(seconds % 60);
+  return `${String(minutes).padStart(2, "0")}:${String(remaining).padStart(2, "0")}`;
+}
+
+async function playCurrentTrack() {
+  if (state.userPaused || !elements.neteaseAudio.src) return false;
+
+  try {
+    await elements.neteaseAudio.play();
+    state.autoplayPending = false;
+    return true;
+  } catch (error) {
+    if (error?.name === "NotAllowedError") {
+      state.autoplayPending = true;
+      const title = elements.currentTrackTitle.textContent;
+      elements.musicHint.textContent =
+        `点按页面播放《${title}》 · 右上角可切换歌曲`;
+    }
+    return false;
+  }
+}
+
+function loadActiveTrack() {
+  if (!state.activeSongId) return;
+  elements.neteaseAudio.src =
+    `https://music.163.com/song/media/outer/url?id=${encodeURIComponent(state.activeSongId)}.mp3`;
+  elements.neteaseAudio.load();
+  elements.audioProgressFill.style.width = "0%";
+  elements.audioProgress.setAttribute("aria-valuenow", "0");
+  elements.audioTime.textContent = "00:00 / 00:00";
+  playCurrentTrack();
+}
+
+function selectTrack(option, { userInitiated = true } = {}) {
+  const songId = option.dataset.songId;
+  const title = option.querySelector(".track-option__title")?.textContent || "歌曲";
+  const artist = option.querySelector(".track-option__artist")?.textContent.split(" · ")[0] || "";
+  if (!songId) return;
+
+  if (userInitiated) state.userPaused = false;
+  state.activeSongId = songId;
+  for (const track of elements.trackOptions) {
+    const active = track === option;
+    track.classList.toggle("is-active", active);
+    track.setAttribute("aria-checked", String(active));
+  }
+
+  elements.currentTrackTitle.textContent = title;
+  elements.currentTrackArtist.textContent = artist;
+  elements.musicProvider.textContent = "音源来自网易云音乐";
+  elements.musicHint.textContent = `点右侧图标切换 · ${title}`;
+  loadActiveTrack();
+}
+
+function startCurrentTrack() {
+  if (!state.userPaused) return playCurrentTrack();
+  return Promise.resolve(false);
+}
+
+function resumeAutoplayAfterInteraction() {
+  if (!state.autoplayPending || state.userPaused || !state.activeSongId) return;
+  startCurrentTrack();
+}
+
 elements.cameraButton.addEventListener("click", startCameraMode);
 elements.retryCamera.addEventListener("click", startCameraMode);
 elements.pointerEntry.addEventListener("click", startPointerMode);
 elements.permissionPointer.addEventListener("click", startPointerMode);
 elements.finaleRestart.addEventListener("click", resetExperience);
 elements.restartButton.addEventListener("click", resetExperience);
-elements.soundButton.addEventListener("click", () => {
-  const muted = score.toggleMuted();
-  elements.soundButton.setAttribute("aria-pressed", String(muted));
-  elements.soundButton.setAttribute("aria-label", muted ? "打开声音" : "关闭声音");
+elements.musicButton.addEventListener("click", () => {
+  setMusicPanelOpen(!state.musicPanelOpen);
+});
+elements.trackOptions.forEach((option) => {
+  option.addEventListener("click", () => selectTrack(option));
+});
+elements.playerToggle.addEventListener("click", () => {
+  if (elements.neteaseAudio.paused) {
+    state.userPaused = false;
+    playCurrentTrack();
+  } else {
+    state.userPaused = true;
+    elements.neteaseAudio.pause();
+  }
+});
+elements.neteaseAudio.addEventListener("play", () => {
+  state.autoplayPending = false;
+  elements.neteasePlayer.classList.add("is-playing");
+  elements.playerToggle.setAttribute("aria-label", "暂停音乐");
+  const title = elements.currentTrackTitle.textContent;
+  elements.musicHint.textContent = `正在播放《${title}》 · 右上角可切换歌曲`;
+});
+elements.neteaseAudio.addEventListener("pause", () => {
+  elements.neteasePlayer.classList.remove("is-playing");
+  elements.playerToggle.setAttribute("aria-label", "播放音乐");
+  if (!elements.neteaseAudio.ended && state.userPaused) {
+    elements.musicHint.textContent = "音乐已暂停 · 右上角可继续播放或切换歌曲";
+  }
+});
+elements.neteaseAudio.addEventListener("loadedmetadata", () => {
+  elements.audioTime.textContent =
+    `00:00 / ${formatAudioTime(elements.neteaseAudio.duration)}`;
+});
+elements.neteaseAudio.addEventListener("timeupdate", () => {
+  const duration = elements.neteaseAudio.duration;
+  const current = elements.neteaseAudio.currentTime;
+  const progress = duration > 0 ? clamp(current / duration) * 100 : 0;
+  elements.audioProgressFill.style.width = `${progress}%`;
+  elements.audioProgress.setAttribute("aria-valuenow", String(Math.round(progress)));
+  elements.audioTime.textContent =
+    `${formatAudioTime(current)} / ${formatAudioTime(duration)}`;
+});
+elements.neteaseAudio.addEventListener("ended", () => {
+  elements.neteasePlayer.classList.remove("is-playing");
+  elements.playerToggle.setAttribute("aria-label", "重新播放音乐");
+  elements.musicHint.textContent = "播放结束 · 右上角可重播或切换歌曲";
+});
+elements.neteaseAudio.addEventListener("error", () => {
+  elements.musicProvider.textContent = "网易云音源暂时不可用";
+  elements.musicHint.textContent = "音乐加载失败 · 请切换歌曲";
 });
 
 window.addEventListener("pointermove", updatePointer, { passive: true });
 window.addEventListener("pointerdown", updatePointer, { passive: true });
+document.addEventListener("pointerdown", (event) => {
+  if (
+    state.musicPanelOpen &&
+    !event.target.closest("#musicPanel") &&
+    !event.target.closest("#musicButton")
+  ) {
+    setMusicPanelOpen(false);
+  }
+});
+document.addEventListener("pointerdown", resumeAutoplayAfterInteraction, {
+  capture: true,
+  passive: true,
+});
+document.addEventListener("keydown", (event) => {
+  resumeAutoplayAfterInteraction();
+  if (event.key === "Escape" && state.musicPanelOpen) {
+    setMusicPanelOpen(false);
+    elements.musicButton.focus();
+  }
+});
 window.addEventListener("resize", () => {
   updateCompatibility();
   handTracker?.resizeOverlay();
 });
 window.addEventListener("pagehide", () => {
+  elements.neteaseAudio.pause();
   handTracker?.stop();
-  score.destroy();
 });
+
+const defaultTrack = elements.trackOptions.find(
+  (option) => option.dataset.songId === DEFAULT_SONG_ID
+);
+if (defaultTrack) selectTrack(defaultTrack, { userInitiated: false });
 
 updateCompatibility();
 handlePreviewMode();
