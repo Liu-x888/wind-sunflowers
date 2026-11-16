@@ -851,6 +851,45 @@ body[data-started="true"] .masthead {
   letter-spacing: 0.08em;
 }
 
+.finale-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.finale-continue {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 15px;
+  border: 1px solid rgba(54, 72, 61, 0.62);
+  border-radius: 5px;
+  background: rgba(58, 76, 65, 0.9);
+  box-shadow: 0 8px 24px rgba(58, 69, 60, 0.1);
+  color: #fffdf5;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.finale-continue:hover {
+  background: #425b4c;
+  transform: translateY(-1px);
+}
+
+.finale-continue svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
 @keyframes finale-arrive {
   from {
     opacity: 0;

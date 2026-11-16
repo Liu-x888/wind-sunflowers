@@ -257,9 +257,18 @@
         <p class="eyebrow">风停在这里</p>
         <h2>花园记得你带来的风</h2>
         <p>金色的向日葵已经盛开。</p>
-        <button class="text-button" id="finaleRestartButton" type="button">
-          再看一次
-        </button>
+        <div class="finale-actions">
+          <button class="text-button" id="finaleRestartButton" type="button">
+            再看一次
+          </button>
+          <a class="finale-continue" id="continueViewingButton" href="./sunset.html">
+            <span>继续观赏</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h13" />
+              <path d="m14 7 5 5-5 5" />
+            </svg>
+          </a>
+        </div>
       </section>
 
       <div class="toast" id="toast" role="status" hidden></div>

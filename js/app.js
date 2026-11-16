@@ -40,11 +40,13 @@ const elements = {
   restartButton: $("#restartButton"),
   finale: $("#finale"),
   finaleRestart: $("#finaleRestartButton"),
+  continueViewing: $("#continueViewingButton"),
   toast: $("#toast"),
 };
 
 const scene = new GardenScene(elements.canvas);
 const DEFAULT_SONG_ID = "406173";
+const MUSIC_SESSION_KEY = "wind-sunflowers-music";
 
 const state = {
   mode: null,
@@ -78,7 +80,7 @@ const PHASES = [
   { end: 0.4, prompt: "再加入另一只手，让风穿过花园" },
   { end: 0.62, prompt: "双手一起移动，风经过哪里，哪里先开放" },
   { end: 0.84, prompt: "沿着尚未开放的花，再让风走一遍" },
-  { end: 1, prompt: "让风经过还没有开放的花朵" },
+  { end: 1, prompt: "沿着花海，让最后一束风落下" },
 ];
 
 function clamp(value, min = 0, max = 1) {
@@ -160,6 +162,8 @@ function getRequiredHands() {
 
 function getPhasePrompt() {
   const phase = PHASES.find((item) => state.progress < item.end) || PHASES.at(-1);
+  const coverage = scene.getBloomCoverage();
+  if (state.finished) return "整片花海已经醒来";
   if (
     state.mode === "camera" &&
     state.progress >= 0.33 &&
@@ -175,8 +179,11 @@ function getPhasePrompt() {
   ) {
     return "第二条风迹已经出现，继续移动鼠标";
   }
-  if (state.progress >= 1 && scene.getBloomCoverage() < 0.85) {
-    return "让风经过还没有开放的花朵";
+  if (state.progress >= 0.84 && coverage < 0.76) {
+    return "再沿花海走一小段，让剩下的花醒来";
+  }
+  if (state.progress >= 0.84) {
+    return "最后一束风正在穿过花海";
   }
   return phase.prompt;
 }
@@ -373,10 +380,11 @@ function updateExperience(now) {
     state.progress = clamp(state.progress + (delta / 48) * rate);
   }
 
+  const bloomCoverage = scene.getBloomCoverage();
   if (
-    state.progress >= 1 &&
-    scene.getBloomCoverage() >= 0.85 &&
-    !state.finished
+    !state.finished &&
+    ((state.progress >= 0.84 && bloomCoverage >= 0.74) ||
+      bloomCoverage >= 0.93)
   ) {
     finishExperience();
   }
@@ -531,12 +539,24 @@ function resumeAutoplayAfterInteraction() {
   startCurrentTrack();
 }
 
+function saveMusicSession() {
+  sessionStorage.setItem(
+    MUSIC_SESSION_KEY,
+    JSON.stringify({
+      songId: state.activeSongId,
+      currentTime: elements.neteaseAudio.currentTime,
+      paused: elements.neteaseAudio.paused,
+    })
+  );
+}
+
 elements.cameraButton.addEventListener("click", startCameraMode);
 elements.retryCamera.addEventListener("click", startCameraMode);
 elements.pointerEntry.addEventListener("click", startPointerMode);
 elements.permissionPointer.addEventListener("click", startPointerMode);
 elements.finaleRestart.addEventListener("click", resetExperience);
 elements.restartButton.addEventListener("click", resetExperience);
+elements.continueViewing.addEventListener("click", saveMusicSession);
 elements.musicButton.addEventListener("click", () => {
   setMusicPanelOpen(!state.musicPanelOpen);
 });
@@ -637,7 +657,15 @@ window.__windLilies = {
     progress: state.progress,
     handCount: state.hands.length,
     bloomCoverage: scene.getBloomCoverage(),
+    hands: state.hands.map(({ x, y, vx, vy }) => ({ x, y, vx, vy })),
   }),
+  getBloomSnapshot: () =>
+    scene.plants.map(({ x, y, depth, windBloom }) => ({
+      x,
+      y,
+      depth,
+      bloom: windBloom,
+    })),
   setProgress(value) {
     state.started = true;
     state.progress = clamp(Number(value));

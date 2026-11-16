@@ -1,0 +1,256 @@
+.sunset-experience {
+  min-width: 0;
+  min-height: 0;
+  background: #d89159;
+}
+
+#sunsetCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.sunset-grain,
+.sunset-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sunset-grain {
+  z-index: 3;
+  opacity: 0.2;
+  background-image:
+    radial-gradient(circle at 18% 32%, rgba(255, 246, 220, 0.22) 0 0.7px, transparent 0.9px),
+    radial-gradient(circle at 72% 61%, rgba(72, 55, 38, 0.13) 0 0.7px, transparent 0.9px);
+  background-position: 0 0, 5px 7px;
+  background-size: 8px 8px, 11px 11px;
+  mix-blend-mode: soft-light;
+}
+
+.sunset-vignette {
+  z-index: 4;
+  background:
+    linear-gradient(180deg, rgba(97, 57, 43, 0.12), transparent 24%, transparent 79%, rgba(65, 49, 33, 0.2)),
+    radial-gradient(circle at 50% 43%, transparent 42%, rgba(71, 48, 31, 0.2) 112%);
+}
+
+.sunset-masthead {
+  z-index: 12;
+  padding: 28px 36px;
+}
+
+.view-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: rgba(255, 250, 235, 0.92);
+  font-size: 12px;
+  letter-spacing: 0.13em;
+  text-decoration: none;
+  text-shadow: 0 2px 14px rgba(81, 48, 27, 0.38);
+  pointer-events: auto;
+}
+
+.view-back svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+  transition: transform 180ms ease;
+}
+
+.view-back:hover svg {
+  transform: translateX(-3px);
+}
+
+.view-back small {
+  color: rgba(255, 249, 231, 0.62);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+}
+
+.sunset-masthead .music-hint {
+  color: rgba(255, 248, 227, 0.72);
+  text-shadow: 0 2px 14px rgba(81, 48, 27, 0.44);
+}
+
+.sunset-masthead .icon-button {
+  border-color: rgba(255, 246, 225, 0.38);
+  background: rgba(255, 244, 221, 0.2);
+}
+
+.sunset-masthead .icon-button:hover,
+.sunset-masthead .netease-button[aria-expanded="true"] {
+  background: rgba(255, 248, 230, 0.42);
+}
+
+.sunset-caption {
+  position: absolute;
+  z-index: 8;
+  bottom: 42px;
+  left: 42px;
+  pointer-events: none;
+  color: #fff8e7;
+  text-shadow: 0 3px 22px rgba(76, 43, 26, 0.44);
+  animation: sunset-caption-arrive 1400ms 300ms ease both;
+  transition: opacity 1400ms ease, transform 1400ms ease;
+}
+
+.sunset-caption.is-dimmed {
+  animation: none;
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.sunset-caption p {
+  margin: 0 0 8px;
+  color: rgba(255, 246, 222, 0.72);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+}
+
+.sunset-caption h1 {
+  margin: 0;
+  font-size: clamp(34px, 4vw, 58px);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+.journey-prompt {
+  position: absolute;
+  z-index: 8;
+  top: 14%;
+  left: 50%;
+  width: min(540px, calc(100vw - 64px));
+  color: rgba(255, 248, 229, 0.88);
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 9px);
+  transition: opacity 1200ms ease, transform 1600ms ease;
+}
+
+.journey-prompt.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.journey-prompt span {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  line-height: 1.8;
+  text-shadow: 0 3px 22px rgba(79, 47, 31, 0.38);
+}
+
+.sunset-message {
+  position: absolute;
+  z-index: 9;
+  top: 50%;
+  left: 50%;
+  width: min(560px, calc(100vw - 48px));
+  padding: 22px 28px 20px;
+  border: 1px solid rgba(255, 241, 207, 0.28);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, rgba(87, 66, 51, 0.2), transparent 62%),
+    rgba(255, 244, 218, 0.78);
+  box-shadow: 0 18px 60px rgba(73, 45, 31, 0.18);
+  color: #59483b;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(-50% + 14px));
+  transition: opacity 1600ms ease, transform 1600ms ease;
+  backdrop-filter: blur(16px);
+}
+
+.sunset-message.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+
+.sunset-message p {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: 0.09em;
+  line-height: 1.7;
+}
+
+.sunset-message span {
+  display: block;
+  margin-top: 7px;
+  color: rgba(83, 64, 50, 0.68);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+@keyframes sunset-caption-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 820px) {
+  .sunset-masthead {
+    padding: 20px;
+  }
+
+  .sunset-masthead .music-hint {
+    display: none;
+  }
+
+  .sunset-masthead .music-panel {
+    width: min(334px, calc(100vw - 40px));
+  }
+
+  .sunset-caption {
+    bottom: 28px;
+    left: 24px;
+  }
+
+  .sunset-message {
+    top: 50%;
+    bottom: auto;
+    padding: 18px 20px 16px;
+  }
+
+  .sunset-message p {
+    font-size: 15px;
+  }
+
+  .journey-prompt {
+    top: 12%;
+  }
+
+  .journey-prompt span {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+  }
+
+  .sunset-caption h1 {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 520px) {
+  .view-back span {
+    display: none;
+  }
+
+  .sunset-caption h1 {
+    font-size: 31px;
+  }
+}
