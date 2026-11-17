@@ -47,6 +47,13 @@ const elements = {
 const scene = new GardenScene(elements.canvas);
 const DEFAULT_SONG_ID = "406173";
 const MUSIC_SESSION_KEY = "wind-sunflowers-music";
+const VIEWING_ACCESS_KEY = "wind-sunflowers-viewing-access";
+
+try {
+  sessionStorage.removeItem(VIEWING_ACCESS_KEY);
+} catch {
+  // The interactive garden still works when browser storage is unavailable.
+}
 
 const state = {
   mode: null,
@@ -540,14 +547,19 @@ function resumeAutoplayAfterInteraction() {
 }
 
 function saveMusicSession() {
-  sessionStorage.setItem(
-    MUSIC_SESSION_KEY,
-    JSON.stringify({
-      songId: state.activeSongId,
-      currentTime: elements.neteaseAudio.currentTime,
-      paused: elements.neteaseAudio.paused,
-    })
-  );
+  try {
+    sessionStorage.setItem(
+      MUSIC_SESSION_KEY,
+      JSON.stringify({
+        songId: state.activeSongId,
+        currentTime: elements.neteaseAudio.currentTime,
+        paused: elements.neteaseAudio.paused,
+      })
+    );
+    sessionStorage.setItem(VIEWING_ACCESS_KEY, "completed");
+  } catch {
+    // Navigation still proceeds if browser storage is unavailable.
+  }
 }
 
 elements.cameraButton.addEventListener("click", startCameraMode);

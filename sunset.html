@@ -9,6 +9,18 @@
     />
     <meta name="theme-color" content="#d99055" />
     <title>余晖花径 · 风起向日葵</title>
+    <script>
+      try {
+        if (
+          sessionStorage.getItem("wind-sunflowers-viewing-access") !==
+          "completed"
+        ) {
+          window.location.replace("./");
+        }
+      } catch {
+        window.location.replace("./");
+      }
+    </script>
     <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="./sunset.css" />
